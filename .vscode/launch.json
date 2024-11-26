@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "type": "bun",
+      "request": "launch",
+      "name": "API server",
+      "program": "${workspaceFolder}/src/serve.ts",
+      "watchMode": "hot"
+    },
+    {
+      "type": "bun",
+      "request": "launch",
+      "name": "cron job",
+      "program": "${workspaceFolder}/src/cron.ts",
+      "watchMode": "hot"
+    }
+  ]
+}
