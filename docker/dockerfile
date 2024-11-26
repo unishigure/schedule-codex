@@ -1,0 +1,15 @@
+FROM oven/bun:1-slim
+
+ARG USERNAME="schedule-codex"
+RUN useradd -m "$USERNAME"
+WORKDIR /home/$USERNAME
+
+COPY ./src ./src
+COPY ./package.json ./
+COPY ./bun.lockb ./
+
+RUN chown "$USERNAME":"$USERNAME" ./ \
+&& bun install
+
+USER $USERNAME
+WORKDIR /home/$USERNAME/
