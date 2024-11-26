@@ -9,9 +9,17 @@ const oauth2Client = new google.auth.OAuth2({
 });
 const scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
 
+/**
+ * OAuth2 client's Refresh Token
+ *
+ * Only get a refresh_token in the response on the first authorisation
+ * @link https://github.com/googleapis/google-api-nodejs-client/issues/750#issuecomment-304521450
+ */
+let refreshToken = "";
+
 oauth2Client.on("tokens", (tokens) => {
   console.log("Update tokens", tokens);
-  oauth2Client.setCredentials(tokens);
+  oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
 
   if (tokens.expiry_date) {
     const expired = new Date(tokens.expiry_date);
@@ -32,12 +40,18 @@ function getAuth() {
 
 async function getOauth2callback(code: string) {
   const { tokens } = await oauth2Client.getToken(code);
-  oauth2Client.setCredentials(tokens);
-  if (tokens.expiry_date) {
-    const expired = new Date(tokens.expiry_date);
-    return `Authenticated!\n` + `expires_in: ${expired.toLocaleString()}`;
+
+  if (tokens.refresh_token) {
+    refreshToken = tokens.refresh_token;
   }
-  return "Authenticated!";
+  oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
+
+  const expired = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
+  return {
+    message: "Authenticated!",
+    expired: expired?.toLocaleString(),
+    refreshTokenExists: !!refreshToken,
+  };
 }
 
 async function getToday() {
@@ -138,5 +152,5 @@ const app = new Elysia()
   .get("/today", getToday)
   .get("/week", getWeek)
   .post("/week", postWeek)
-  .listen(process.env.PORT ?? 3000);
+  .listen(process.env.API_PORT ?? 3000);
 export type App = typeof app;
