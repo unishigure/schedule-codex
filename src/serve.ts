@@ -1,6 +1,6 @@
-import { google } from "googleapis";
-import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
+import { Elysia } from "elysia";
+import { google } from "googleapis";
 
 const oauth2Client = new google.auth.OAuth2({
   clientId: process.env.GOOGLE_CLIENT_ID,
@@ -15,7 +15,7 @@ const scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
  * Only get a refresh_token in the response on the first authorisation
  * @link https://github.com/googleapis/google-api-nodejs-client/issues/750#issuecomment-304521450
  */
-let refreshToken = "";
+let refreshToken = await loadRefreshToken();
 
 oauth2Client.on("tokens", (tokens) => {
   console.log("Update tokens", tokens);
@@ -27,15 +27,41 @@ oauth2Client.on("tokens", (tokens) => {
   }
 });
 
+function saveRefreshToken(refreshToken: string) {
+  Bun.write("refresh_token", refreshToken);
+}
+
+async function loadRefreshToken() {
+  try {
+    const file = Bun.file("refresh_token");
+    return await file.text();
+  } catch (error) {
+    return "";
+  }
+}
+
 function getAuth() {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: scopes,
   });
-  return {
-    message: "Authorize this app by visiting this URL",
-    authUrl,
-  };
+
+  if (oauth2Client.credentials.access_token) {
+    const expired = oauth2Client.credentials.expiry_date
+      ? new Date(oauth2Client.credentials.expiry_date)
+      : null;
+    return {
+      message: "Already authenticated!",
+      expired: expired?.toLocaleString(),
+      refreshTokenExists: !!refreshToken,
+      authUrl,
+    };
+  } else {
+    return {
+      message: "Authorize this app by visiting this URL",
+      authUrl,
+    };
+  }
 }
 
 async function getOauth2callback(code: string) {
@@ -43,6 +69,7 @@ async function getOauth2callback(code: string) {
 
   if (tokens.refresh_token) {
     refreshToken = tokens.refresh_token;
+    saveRefreshToken(tokens.refresh_token);
   }
   oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
 
@@ -144,7 +171,12 @@ async function postWeek() {
 
 const app = new Elysia()
   .use(swagger({ path: "/docs" }))
-  .get("/auth", getAuth)
+  .get("/auth", getAuth, {
+    detail: {
+      description:
+        "Revoke the permissions: https://myaccount.google.com/permissions",
+    },
+  })
   .get("/oauth2callback", async (req) => {
     const code = req.query.code ?? "";
     return await getOauth2callback(code);
