@@ -11,16 +11,5 @@ services:
     env_file: ../.env
     environment:
       - TZ=Asia/Tokyo
-    entrypoint: ["bun", "src/serve.ts"]
-    restart: always
-
-  cron:
-    container_name: cron
-    build:
-      context: ../
-      dockerfile: docker/dockerfile
-    env_file: ../.env
-    environment:
-      - TZ=Asia/Tokyo
-    entrypoint: ["bun", "src/cron.ts"]
+    entrypoint: ["bun", "src/index.ts"]
     restart: always

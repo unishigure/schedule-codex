@@ -1,3 +1,5 @@
+import { cron } from "@elysiajs/cron";
+import { treaty } from "@elysiajs/eden";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { google } from "googleapis";
@@ -222,4 +224,18 @@ const app = new Elysia()
   .get("/week", getWeek)
   .post("/week", postWeek)
   .listen(process.env.API_PORT ?? 3000);
-export type App = typeof app;
+
+const api = treaty<typeof app>(process.env.API_URL ?? "");
+
+new Elysia().use(
+  cron({
+    name: "reminder-event",
+    pattern: "0 18 * * *",
+    timezone: "Asia/Tokyo",
+    async run() {
+      console.log(new Date(), "Cron job started");
+      await api.today.post();
+      console.log(new Date(), "Cron job finished");
+    },
+  })
+);
