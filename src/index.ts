@@ -1,7 +1,7 @@
 import { cron } from "@elysiajs/cron";
 import { treaty } from "@elysiajs/eden";
 import { swagger } from "@elysiajs/swagger";
-import { Elysia } from "elysia";
+import { Elysia, type Context } from "elysia";
 import { google } from "googleapis";
 
 const oauth2Client = new google.auth.OAuth2({
@@ -66,8 +66,12 @@ function getAuth() {
   }
 }
 
-async function getOauth2callback(code: string) {
-  const { tokens } = await oauth2Client.getToken(code);
+async function getOauth2callback(context: Context) {
+  if (!context.query.code) {
+    return context.error(400, "No code provided");
+  }
+
+  const { tokens } = await oauth2Client.getToken(context.query.code);
 
   if (tokens.refresh_token) {
     refreshToken = tokens.refresh_token;
@@ -215,10 +219,7 @@ const app = new Elysia()
         "Revoke the permissions: https://myaccount.google.com/permissions",
     },
   })
-  .get("/oauth2callback", async (req) => {
-    const code = req.query.code ?? "";
-    return await getOauth2callback(code);
-  })
+  .get("/oauth2callback", (context) => getOauth2callback(context))
   .get("/today", getToday)
   .post("/today", postToday)
   .get("/week", getWeek)
