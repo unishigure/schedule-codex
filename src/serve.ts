@@ -108,6 +108,42 @@ async function getToday() {
   }
 }
 
+async function postToday() {
+  const events = await getToday();
+  if (!Array.isArray(events)) {
+    return;
+  }
+
+  events.forEach(async (event) => {
+    console.log(`Event: ${event.summary}`);
+    console.log(`Start: ${event.start?.dateTime}`);
+    console.log(`End: ${event.end?.dateTime}`);
+
+    const start = new Date(event.start?.dateTime ?? "").getTime() / 1000;
+    const messageBody = {
+      embeds: [
+        {
+          title: `Reminder: ${event.summary}`,
+          description: `本日活動日です！\n<t:${start}:t>より`,
+          timestamp: event.start?.dateTime,
+          color: parseInt("ffd700", 16),
+          image: {
+            url: process.env.DISCORD_IMAGE_URL ?? "",
+          },
+        },
+      ],
+    };
+
+    await fetch(new URL(process.env.DISCORD_WEBHOOK_URL ?? ""), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(messageBody),
+    });
+  });
+}
+
 async function getWeek() {
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
@@ -182,6 +218,7 @@ const app = new Elysia()
     return await getOauth2callback(code);
   })
   .get("/today", getToday)
+  .post("/today", postToday)
   .get("/week", getWeek)
   .post("/week", postWeek)
   .listen(process.env.API_PORT ?? 3000);
