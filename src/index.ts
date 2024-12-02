@@ -161,6 +161,7 @@ async function getWeek() {
   const sixDaysLater = new Date(
     nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
   );
+  sixDaysLater.setHours(23, 59, 59, 999);
 
   try {
     const events = await calendar.events.list({
