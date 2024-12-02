@@ -153,15 +153,20 @@ async function postToday() {
 async function getWeek() {
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const nextTuesday = new Date();
+  nextTuesday.setDate(
+    nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7)
+  );
+  nextTuesday.setHours(0, 0, 0, 0);
+  const sixDaysLater = new Date(
+    nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
+  );
 
   try {
     const events = await calendar.events.list({
       calendarId: process.env.GOOGLE_CALENDAR_ID,
-      timeMin: today.toISOString(),
-      timeMax: nextWeek.toISOString(),
+      timeMin: nextTuesday.toISOString(),
+      timeMax: sixDaysLater.toISOString(),
       maxResults: 10,
       singleEvents: true,
       orderBy: "startTime",
