@@ -184,8 +184,14 @@ async function postWeek() {
     return;
   }
 
-  const today = new Date();
-  const sixDaysLater = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
+  const nextTuesday = new Date();
+  nextTuesday.setDate(
+    nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7)
+  );
+  nextTuesday.setHours(0, 0, 0, 0);
+  const sixDaysLater = new Date(
+    nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
+  );
 
   const eventList = events.map((event) => {
     const start = new Date(event.start?.dateTime ?? "").getTime() / 1000;
@@ -195,7 +201,7 @@ async function postWeek() {
   const messageBody = {
     embeds: [
       {
-        title: `Schedule: ${today.toLocaleDateString()} - ${sixDaysLater.toLocaleDateString()}`,
+        title: `Schedule: ${nextTuesday.toLocaleDateString()} - ${sixDaysLater.toLocaleDateString()}`,
         description: `今週の予定です！\n${eventList.join("\n")}`,
         color: parseInt("ffd700", 16),
       },
