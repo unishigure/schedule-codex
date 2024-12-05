@@ -243,7 +243,7 @@ const api = treaty<typeof app>(process.env.API_URL ?? "");
 new Elysia().use(
   cron({
     name: "reminder-event",
-    pattern: "0 18 * * *",
+    pattern: "0 0 * * *",
     timezone: "Asia/Tokyo",
     async run() {
       console.log(new Date(), "Cron job started");
