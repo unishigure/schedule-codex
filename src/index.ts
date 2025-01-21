@@ -57,6 +57,7 @@ function getAuth() {
       expired: expired?.toLocaleString(),
       refreshTokenExists: !!refreshToken,
       authUrl,
+      resetUrl: "https://myaccount.google.com/permissions",
     };
   } else {
     return {
