@@ -11,5 +11,4 @@ services:
     env_file: ../.env
     environment:
       - TZ=Asia/Tokyo
-    entrypoint: ["bun", "src/index.ts"]
     restart: always

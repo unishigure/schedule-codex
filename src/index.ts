@@ -63,6 +63,7 @@ function getAuth() {
     return {
       message: "Authorize this app by visiting this URL",
       authUrl,
+      resetUrl: "https://myaccount.google.com/permissions",
     };
   }
 }
