@@ -254,3 +254,5 @@ new Elysia().use(
     },
   })
 );
+
+console.log("Server started at", process.env.API_PORT);

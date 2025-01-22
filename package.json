@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/index.ts --hot",
-    "start": "bun run index.ts",
     "docker:up": "docker compose -f docker/compose.yml --env-file .env up -d",
     "docker:down": "docker compose -f docker/compose.yml --env-file .env down"
   },
