@@ -227,7 +227,7 @@ async function postWeek() {
 const app = new Elysia()
   .use(logger({ withBanner: true }))
   .use(swagger({ path: "/docs" }))
-  .get("/", (context) => context.redirect("/docs"))
+  .get("/", (context) => context.redirect("/docs"), { detail: { hide: true } })
   .get("/auth", getAuth, {
     detail: {
       description:
