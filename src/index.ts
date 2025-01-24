@@ -107,7 +107,6 @@ async function getToday() {
 
     return events.data.items;
   } catch (error) {
-    console.error(error);
     if (error instanceof Error) {
       return { message: error.message, error };
     } else {
@@ -177,7 +176,6 @@ async function getWeek() {
 
     return events.data.items;
   } catch (error) {
-    console.error(error);
     if (error instanceof Error) {
       return { message: error.message, error };
     } else {
