@@ -3,6 +3,7 @@ import { treaty } from "@elysiajs/eden";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia, type Context } from "elysia";
 import { google } from "googleapis";
+import { logger } from "@tqman/nice-logger";
 
 const oauth2Client = new google.auth.OAuth2({
   clientId: process.env.GOOGLE_CLIENT_ID,
@@ -224,6 +225,7 @@ async function postWeek() {
 }
 
 const app = new Elysia()
+  .use(logger({ withBanner: true }))
   .use(swagger({ path: "/docs" }))
   .get("/auth", getAuth, {
     detail: {
@@ -252,5 +254,3 @@ new Elysia().use(
     },
   })
 );
-
-console.log("Server started at", process.env.API_PORT);
