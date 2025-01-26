@@ -1,9 +1,10 @@
 import { cron } from "@elysiajs/cron";
 import { treaty } from "@elysiajs/eden";
 import { swagger } from "@elysiajs/swagger";
+import { logger } from "@tqman/nice-logger";
 import { Elysia, type Context } from "elysia";
 import { google } from "googleapis";
-import { logger } from "@tqman/nice-logger";
+import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
 const oauth2Client = new google.auth.OAuth2({
   clientId: process.env.GOOGLE_CLIENT_ID,
@@ -58,20 +59,19 @@ function getAuth() {
       expired: expired?.toLocaleString(),
       refreshTokenExists: !!refreshToken,
       authUrl,
-      resetUrl: "https://myaccount.google.com/permissions",
     };
   } else {
     return {
       message: "Authorize this app by visiting this URL",
       authUrl,
-      resetUrl: "https://myaccount.google.com/permissions",
     };
   }
 }
 
 async function getOauth2callback(context: Context) {
   if (!context.query.code) {
-    return context.error(400, "No code provided");
+    context.set.status = StatusCodes.BAD_REQUEST;
+    return context.error(StatusCodes.BAD_REQUEST, "No code provided");
   }
 
   const { tokens } = await oauth2Client.getToken(context.query.code);
@@ -90,7 +90,7 @@ async function getOauth2callback(context: Context) {
   };
 }
 
-async function getToday() {
+async function getToday(context?: Context) {
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
   const now = new Date();
@@ -108,24 +108,41 @@ async function getToday() {
 
     return events.data.items;
   } catch (error) {
-    if (error instanceof Error) {
-      return { message: error.message, error };
+    if (context) {
+      if (error instanceof Error) {
+        context.set.status = StatusCodes.UNAUTHORIZED;
+        return context.error(StatusCodes.UNAUTHORIZED, error.message);
+      } else {
+        console.error(error);
+        context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
+        return context.error(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          ReasonPhrases.INTERNAL_SERVER_ERROR
+        );
+      }
     } else {
-      return { error };
+      throw error;
     }
   }
 }
 
-async function postToday() {
-  const events = await getToday();
-  if (!Array.isArray(events)) {
-    return;
-  }
+async function postToday(context: Context) {
+  try {
+    const events = await getToday();
+    if (!Array.isArray(events) || events.length === 0) {
+      return { message: "No events found" };
+    }
 
-  events.forEach(async (event) => {
-    console.log(`Event: ${event.summary}`);
-    console.log(`Start: ${event.start?.dateTime}`);
-    console.log(`End: ${event.end?.dateTime}`);
+    const event = events[0];
+
+    if (events.length > 1) {
+      console.warn("Multiple events found. Only the first one is posted.");
+    }
+    console.log({
+      event: event,
+      start: event.start?.dateTime,
+      end: event.end?.dateTime,
+    });
 
     const start = new Date(event.start?.dateTime ?? "").getTime() / 1000;
     const messageBody = {
@@ -142,17 +159,41 @@ async function postToday() {
       ],
     };
 
-    await fetch(new URL(process.env.DISCORD_WEBHOOK_URL ?? ""), {
+    const res = await fetch(new URL(process.env.DISCORD_WEBHOOK_URL ?? ""), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(messageBody),
-    });
-  });
+    })
+      .then((res) => {
+        if (res.ok) {
+          return { message: "Success" };
+        } else {
+          context.set.status = res.status;
+          return context.error(res.status, res.statusText);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
+        return context.error(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          ReasonPhrases.INTERNAL_SERVER_ERROR
+        );
+      });
+
+    return res;
+  } catch (e) {
+    context.set.status = StatusCodes.FAILED_DEPENDENCY;
+    return context.error(
+      StatusCodes.FAILED_DEPENDENCY,
+      "Event loading failed. Please check the authentication."
+    );
+  }
 }
 
-async function getWeek() {
+async function getWeek(context?: Context) {
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
   const nextTuesday = new Date();
@@ -177,51 +218,91 @@ async function getWeek() {
 
     return events.data.items;
   } catch (error) {
-    if (error instanceof Error) {
-      return { message: error.message, error };
+    if (context) {
+      if (error instanceof Error) {
+        context.set.status = StatusCodes.UNAUTHORIZED;
+        return context.error(StatusCodes.UNAUTHORIZED, error.message);
+      } else {
+        console.error(error);
+        context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
+        return context.error(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          ReasonPhrases.INTERNAL_SERVER_ERROR
+        );
+      }
     } else {
-      return { error };
+      throw error;
     }
   }
 }
 
-async function postWeek() {
-  const events = await getWeek();
-  if (!Array.isArray(events)) {
-    return;
-  }
+async function postWeek(context: Context) {
+  try {
+    const events = await getWeek();
+    if (!Array.isArray(events)) {
+      return { message: "No events found" };
+    }
 
-  const nextTuesday = new Date();
-  nextTuesday.setDate(
-    nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7)
-  );
-  nextTuesday.setHours(0, 0, 0, 0);
-  const sixDaysLater = new Date(
-    nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
-  );
+    const nextTuesday = new Date();
+    nextTuesday.setDate(
+      nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7)
+    );
+    nextTuesday.setHours(0, 0, 0, 0);
+    const sixDaysLater = new Date(
+      nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
+    );
 
-  const eventList = events.map((event) => {
-    const start = new Date(event.start?.dateTime ?? "").getTime() / 1000;
-    return `- <t:${start}:F>`;
-  });
+    const eventList =
+      events.length > 0
+        ? events.map((event) => {
+            const start =
+              new Date(event.start?.dateTime ?? "").getTime() / 1000;
+            return `- <t:${start}:F>`;
+          })
+        : ["- 予定なし"];
 
-  const messageBody = {
-    embeds: [
-      {
-        title: `Schedule: ${nextTuesday.toLocaleDateString()} - ${sixDaysLater.toLocaleDateString()}`,
-        description: `今週の予定です！\n${eventList.join("\n")}`,
-        color: parseInt("ffd700", 16),
+    const messageBody = {
+      embeds: [
+        {
+          title: `Schedule: ${nextTuesday.toLocaleDateString()} - ${sixDaysLater.toLocaleDateString()}`,
+          description: `今週の予定です！\n${eventList.join("\n")}`,
+          color: parseInt("ffd700", 16),
+        },
+      ],
+    };
+
+    const res = await fetch(new URL(process.env.DISCORD_WEBHOOK_URL ?? ""), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ],
-  };
+      body: JSON.stringify(messageBody),
+    })
+      .then((res) => {
+        if (res.ok) {
+          return { message: "Success" };
+        } else {
+          context.set.status = res.status;
+          return context.error(res.status, res.statusText);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
+        return context.error(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          ReasonPhrases.INTERNAL_SERVER_ERROR
+        );
+      });
 
-  await fetch(new URL(process.env.DISCORD_WEBHOOK_URL ?? ""), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(messageBody),
-  });
+    return res;
+  } catch (e) {
+    context.set.status = StatusCodes.FAILED_DEPENDENCY;
+    return context.error(
+      StatusCodes.FAILED_DEPENDENCY,
+      "Event loading failed. Please check the authentication."
+    );
+  }
 }
 
 const app = new Elysia()
