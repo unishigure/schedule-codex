@@ -22,13 +22,16 @@ const scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
 let refreshToken = await loadRefreshToken();
 
 oauth2Client.on("tokens", (tokens) => {
-  console.log("Update tokens", tokens);
-  oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
-
   if (tokens.expiry_date) {
-    const expired = new Date(tokens.expiry_date);
-    console.log("expires_in", expired.toLocaleString());
+    console.log(
+      ` ➜ Update tokens: Expires at ${new Date(
+        tokens.expiry_date
+      ).toLocaleString("ja-JP")}`
+    );
+  } else {
+    console.warn(" ➜ Update tokens: Missing expiry_date");
   }
+  oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
 });
 
 function saveRefreshToken(refreshToken: string) {
@@ -44,28 +47,27 @@ async function loadRefreshToken() {
   }
 }
 
-function getAuth() {
+async function getAuth() {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: scopes,
   });
 
   if (oauth2Client.credentials.access_token) {
-    const expired = oauth2Client.credentials.expiry_date
-      ? new Date(oauth2Client.credentials.expiry_date)
-      : null;
-    return {
-      message: "Already authenticated!",
-      expired: expired?.toLocaleString(),
-      refreshTokenExists: !!refreshToken,
-      authUrl,
-    };
-  } else {
-    return {
-      message: "Authorize this app by visiting this URL",
-      authUrl,
-    };
+    await oauth2Client
+      .revokeCredentials()
+      .then(() => {
+        console.log(" ➜ Revoked the credentials");
+      })
+      .catch(() => {
+        console.warn(" ➜ Failed to revoke the credentials");
+      });
   }
+
+  return {
+    message: "Authorize this app by visiting this URL",
+    authUrl,
+  };
 }
 
 async function getOauth2callback(context: Context) {
