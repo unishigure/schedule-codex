@@ -140,11 +140,6 @@ async function postToday(context: Context) {
     if (events.length > 1) {
       console.warn("Multiple events found. Only the first one is posted.");
     }
-    console.log({
-      event: event,
-      start: event.start?.dateTime,
-      end: event.end?.dateTime,
-    });
 
     const start = new Date(event.start?.dateTime ?? "").getTime() / 1000;
     const messageBody = {
