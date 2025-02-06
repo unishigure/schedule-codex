@@ -300,6 +300,29 @@ async function postWeek(context: Context) {
   }
 }
 
+async function getHealth(context: Context) {
+  if (process.env.HEALTH_WEBHOOK_URL) {
+    await fetch(process.env.HEALTH_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "Health Check",
+            description: `The server is running.\n${context.server?.url.toString()}`,
+            color: parseInt("00ff00", 16),
+          },
+        ],
+      }),
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+  return { message: "OK" };
+}
+
 export const app = new Elysia()
   .use(logger({ withBanner: true }))
   .use(
@@ -326,4 +349,5 @@ export const app = new Elysia()
   .post("/today", postToday, { tags: ["reminder"] })
   .get("/week", getWeek, { tags: ["reminder"] })
   .post("/week", postWeek, { tags: ["reminder"] })
+  .get("/health", getHealth, { tags: ["management"] })
   .listen(process.env.API_PORT ?? 3000);
