@@ -300,7 +300,7 @@ async function postWeek(context: Context) {
   }
 }
 
-async function getHealth(context: Context) {
+async function getHealth() {
   return { message: "OK" };
 }
 
