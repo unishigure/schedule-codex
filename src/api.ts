@@ -311,7 +311,7 @@ export const app = new Elysia()
       path: "/docs",
       documentation: {
         info: {
-          title: "Calendar Reminder API",
+          title: "Schedule Codex",
           version: "1.0.0",
           description: "A simple API to remind your calendar events",
         },
