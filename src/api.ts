@@ -301,25 +301,6 @@ async function postWeek(context: Context) {
 }
 
 async function getHealth(context: Context) {
-  if (process.env.HEALTH_WEBHOOK_URL) {
-    await fetch(process.env.HEALTH_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        embeds: [
-          {
-            title: "Health Check",
-            description: `The server is running.\n${context.server?.url.toString()}`,
-            color: parseInt("00ff00", 16),
-          },
-        ],
-      }),
-    }).catch((error) => {
-      console.error(error);
-    });
-  }
   return { message: "OK" };
 }
 
