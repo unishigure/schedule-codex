@@ -21,6 +21,7 @@ try {
   for await (let line of $`${pushArray}`.lines()) {
     console.log(chalk.gray(line));
   }
+  console.log(chalk.green(`Image pushed successfully`), imageTag);
 } catch (error) {
   console.error(error);
 }
