@@ -4,7 +4,7 @@
       "type": "bun",
       "request": "launch",
       "name": "API server",
-      "program": "${workspaceFolder}/src/index.ts",
+      "program": "${workspaceFolder}/src/api.ts",
       "watchMode": "hot"
     }
   ]

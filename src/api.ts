@@ -1,5 +1,3 @@
-import { cron } from "@elysiajs/cron";
-import { treaty } from "@elysiajs/eden";
 import { swagger } from "@elysiajs/swagger";
 import { logger } from "@tqman/nice-logger";
 import { Elysia, type Context } from "elysia";
@@ -25,8 +23,8 @@ oauth2Client.on("tokens", (tokens) => {
   if (tokens.expiry_date) {
     console.log(
       ` ➜ Update tokens: Expires at ${new Date(
-        tokens.expiry_date
-      ).toLocaleString("ja-JP")}`
+        tokens.expiry_date,
+      ).toLocaleString("ja-JP")}`,
     );
   } else {
     console.warn(" ➜ Update tokens: Missing expiry_date");
@@ -119,7 +117,7 @@ async function getToday(context?: Context) {
         context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
         return context.error(
           StatusCodes.INTERNAL_SERVER_ERROR,
-          ReasonPhrases.INTERNAL_SERVER_ERROR
+          ReasonPhrases.INTERNAL_SERVER_ERROR,
         );
       }
     } else {
@@ -176,7 +174,7 @@ async function postToday(context: Context) {
         context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
         return context.error(
           StatusCodes.INTERNAL_SERVER_ERROR,
-          ReasonPhrases.INTERNAL_SERVER_ERROR
+          ReasonPhrases.INTERNAL_SERVER_ERROR,
         );
       });
 
@@ -185,7 +183,7 @@ async function postToday(context: Context) {
     context.set.status = StatusCodes.FAILED_DEPENDENCY;
     return context.error(
       StatusCodes.FAILED_DEPENDENCY,
-      "Event loading failed. Please check the authentication."
+      "Event loading failed. Please check the authentication.",
     );
   }
 }
@@ -195,11 +193,11 @@ async function getWeek(context?: Context) {
 
   const nextTuesday = new Date();
   nextTuesday.setDate(
-    nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7)
+    nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7),
   );
   nextTuesday.setHours(0, 0, 0, 0);
   const sixDaysLater = new Date(
-    nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
+    nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000,
   );
   sixDaysLater.setHours(23, 59, 59, 999);
 
@@ -224,7 +222,7 @@ async function getWeek(context?: Context) {
         context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
         return context.error(
           StatusCodes.INTERNAL_SERVER_ERROR,
-          ReasonPhrases.INTERNAL_SERVER_ERROR
+          ReasonPhrases.INTERNAL_SERVER_ERROR,
         );
       }
     } else {
@@ -242,11 +240,11 @@ async function postWeek(context: Context) {
 
     const nextTuesday = new Date();
     nextTuesday.setDate(
-      nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7)
+      nextTuesday.getDate() + ((2 + 7 - nextTuesday.getDay()) % 7),
     );
     nextTuesday.setHours(0, 0, 0, 0);
     const sixDaysLater = new Date(
-      nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000
+      nextTuesday.getTime() + 6 * 24 * 60 * 60 * 1000,
     );
 
     const eventList =
@@ -288,7 +286,7 @@ async function postWeek(context: Context) {
         context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
         return context.error(
           StatusCodes.INTERNAL_SERVER_ERROR,
-          ReasonPhrases.INTERNAL_SERVER_ERROR
+          ReasonPhrases.INTERNAL_SERVER_ERROR,
         );
       });
 
@@ -297,12 +295,12 @@ async function postWeek(context: Context) {
     context.set.status = StatusCodes.FAILED_DEPENDENCY;
     return context.error(
       StatusCodes.FAILED_DEPENDENCY,
-      "Event loading failed. Please check the authentication."
+      "Event loading failed. Please check the authentication.",
     );
   }
 }
 
-const app = new Elysia()
+export const app = new Elysia()
   .use(logger({ withBanner: true }))
   .use(
     swagger({
@@ -310,7 +308,7 @@ const app = new Elysia()
       scalarConfig: {
         defaultOpenAllTags: true,
       },
-    })
+    }),
   )
   .get("/", (context) => context.redirect("/docs"), { detail: { hide: true } })
   .get("/auth", getAuth, {
@@ -329,18 +327,3 @@ const app = new Elysia()
   .get("/week", getWeek, { tags: ["reminder"] })
   .post("/week", postWeek, { tags: ["reminder"] })
   .listen(process.env.API_PORT ?? 3000);
-
-const api = treaty<typeof app>(process.env.API_URL ?? "");
-
-new Elysia().use(
-  cron({
-    name: "reminder-event",
-    pattern: "0 0 * * *",
-    timezone: "Asia/Tokyo",
-    async run() {
-      console.log(new Date(), "Cron job started");
-      await api.today.post();
-      console.log(new Date(), "Cron job finished");
-    },
-  })
-);

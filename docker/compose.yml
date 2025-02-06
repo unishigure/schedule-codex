@@ -12,3 +12,14 @@ services:
     environment:
       - TZ=Asia/Tokyo
     restart: always
+
+  cron:
+    container_name: cron
+    build:
+      context: ../
+      dockerfile: docker/dockerfile
+    env_file: ../.env
+    environment:
+      - TZ=Asia/Tokyo
+    restart: always
+    command: ["bun", "run", "cron.ts"]

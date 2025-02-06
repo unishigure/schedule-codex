@@ -1,9 +1,9 @@
 {
   "name": "schedule-codex",
-  "module": "src/index.ts",
+  "module": "src/api.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts --hot",
+    "dev": "bun run src/api.ts --hot",
     "docker:up": "docker compose -f docker/compose.yml --env-file .env up -d",
     "docker:down": "docker compose -f docker/compose.yml --env-file .env down",
     "push": "bun run docker/push-image.ts"
