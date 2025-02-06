@@ -304,19 +304,30 @@ async function postWeek(context: Context) {
 
 const app = new Elysia()
   .use(logger({ withBanner: true }))
-  .use(swagger({ path: "/docs" }))
+  .use(
+    swagger({
+      path: "/docs",
+      scalarConfig: {
+        defaultOpenAllTags: true,
+      },
+    })
+  )
   .get("/", (context) => context.redirect("/docs"), { detail: { hide: true } })
   .get("/auth", getAuth, {
+    tags: ["auth"],
     detail: {
       description:
         "Revoke the permissions: https://myaccount.google.com/permissions",
     },
   })
-  .get("/oauth2callback", (context) => getOauth2callback(context))
-  .get("/today", getToday)
-  .post("/today", postToday)
-  .get("/week", getWeek)
-  .post("/week", postWeek)
+  .get("/oauth2callback", (context) => getOauth2callback(context), {
+    tags: ["auth"],
+    detail: { hide: true },
+  })
+  .get("/today", getToday, { tags: ["reminder"] })
+  .post("/today", postToday, { tags: ["reminder"] })
+  .get("/week", getWeek, { tags: ["reminder"] })
+  .post("/week", postWeek, { tags: ["reminder"] })
   .listen(process.env.API_PORT ?? 3000);
 
 const api = treaty<typeof app>(process.env.API_URL ?? "");
