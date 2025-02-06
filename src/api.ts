@@ -308,6 +308,13 @@ export const app = new Elysia()
   .use(logger({ withBanner: true }))
   .use(
     swagger({
+      documentation: {
+        info: {
+          title: "Calendar Reminder API",
+          version: "1.0.0",
+          description: "A simple API to remind your calendar events",
+        },
+      },
       path: "/docs",
       scalarConfig: {
         defaultOpenAllTags: true,
