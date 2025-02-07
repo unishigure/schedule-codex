@@ -3,6 +3,7 @@ import { logger } from "@tqman/nice-logger";
 import { Elysia, type Context } from "elysia";
 import { google } from "googleapis";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
+import { loadRefreshToken, saveRefreshToken } from "./s3";
 
 const oauth2Client = new google.auth.OAuth2({
   clientId: process.env.GOOGLE_CLIENT_ID,
@@ -11,15 +12,7 @@ const oauth2Client = new google.auth.OAuth2({
 });
 const scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
 
-/**
- * OAuth2 client's Refresh Token
- *
- * Only get a refresh_token in the response on the first authorisation
- * @link https://github.com/googleapis/google-api-nodejs-client/issues/750#issuecomment-304521450
- */
-let refreshToken = await loadRefreshToken();
-
-oauth2Client.on("tokens", (tokens) => {
+oauth2Client.on("tokens", async (tokens) => {
   if (tokens.expiry_date) {
     console.log(
       ` ➜ Update tokens: Expires at ${new Date(
@@ -29,20 +22,16 @@ oauth2Client.on("tokens", (tokens) => {
   } else {
     console.warn(" ➜ Update tokens: Missing expiry_date");
   }
-  oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
+  oauth2Client.setCredentials({
+    ...tokens,
+    refresh_token: await loadRefreshToken(),
+  });
 });
 
-function saveRefreshToken(refreshToken: string) {
-  Bun.write("refresh_token", refreshToken);
-}
-
-async function loadRefreshToken() {
-  try {
-    const file = Bun.file("refresh_token");
-    return await file.text();
-  } catch (error) {
-    return "";
-  }
+async function loadCredentials() {
+  oauth2Client.setCredentials({
+    refresh_token: await loadRefreshToken(),
+  });
 }
 
 async function getAuth() {
@@ -77,16 +66,17 @@ async function getOauth2callback(context: Context) {
   const { tokens } = await oauth2Client.getToken(context.query.code);
 
   if (tokens.refresh_token) {
-    refreshToken = tokens.refresh_token;
-    saveRefreshToken(tokens.refresh_token);
+    await saveRefreshToken(tokens.refresh_token);
   }
-  oauth2Client.setCredentials({ ...tokens, refresh_token: refreshToken });
+  oauth2Client.setCredentials({
+    ...tokens,
+    refresh_token: await loadRefreshToken(),
+  });
 
   const expired = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
   return {
     message: "Authenticated!",
     expired: expired?.toLocaleString(),
-    refreshTokenExists: !!refreshToken,
   };
 }
 
@@ -319,6 +309,8 @@ async function getHealth(context: Context) {
       };
     });
 }
+
+await loadCredentials();
 
 export const app = new Elysia()
   .use(logger({ withBanner: true }))
