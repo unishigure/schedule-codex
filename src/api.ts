@@ -300,8 +300,24 @@ async function postWeek(context: Context) {
   }
 }
 
-async function getHealth() {
-  return { message: "OK" };
+async function getHealth(context: Context) {
+  return await getToday()
+    .then(() => {
+      console.log(" ➜ Health check passed");
+      return { status: "ok" };
+    })
+    .catch((error) => {
+      console.error(" ➜ Health check failed");
+      console.error(error);
+      context.set.status = StatusCodes.INTERNAL_SERVER_ERROR;
+      return {
+        status: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : ReasonPhrases.INTERNAL_SERVER_ERROR,
+      };
+    });
 }
 
 export const app = new Elysia()
