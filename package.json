@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/api.ts",
+    "build": "bun build src/api.ts --outdir ./out --target bun",
     "docker:up": "docker compose -f docker/compose.yml --env-file .env up -d",
     "docker:down": "docker compose -f docker/compose.yml --env-file .env down",
     "push": "bun run docker/push-image.ts"
