@@ -10,6 +10,6 @@ export async function loadRefreshToken() {
   try {
     return await refreshToken.text();
   } catch (e) {
-    return null;
+    return undefined;
   }
 }

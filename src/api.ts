@@ -9,6 +9,9 @@ const oauth2Client = new google.auth.OAuth2({
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   redirectUri: process.env.GOOGLE_REDIRECT_URI,
+  credentials: {
+    refresh_token: await loadRefreshToken(),
+  },
 });
 const scopes = ["https://www.googleapis.com/auth/calendar.readonly"];
 
@@ -27,12 +30,6 @@ oauth2Client.on("tokens", async (tokens) => {
     refresh_token: await loadRefreshToken(),
   });
 });
-
-async function loadCredentials() {
-  oauth2Client.setCredentials({
-    refresh_token: await loadRefreshToken(),
-  });
-}
 
 async function getAuth() {
   const authUrl = oauth2Client.generateAuthUrl({
@@ -309,8 +306,6 @@ async function getHealth(context: Context) {
       };
     });
 }
-
-await loadCredentials();
 
 export const app = new Elysia()
   .use(logger({ withBanner: true }))
