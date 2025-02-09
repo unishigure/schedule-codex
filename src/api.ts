@@ -248,7 +248,7 @@ async function postWeek(context: Context) {
       embeds: [
         {
           title: `Schedule: ${nextTuesday.toLocaleDateString()} - ${sixDaysLater.toLocaleDateString()}`,
-          description: `今週の予定です！\n${eventList.join("\n")}`,
+          description: `一週間の予定です！\n${eventList.join("\n")}`,
           color: parseInt("ffd700", 16),
         },
       ],
