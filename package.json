@@ -12,6 +12,7 @@
   "dependencies": {
     "@elysiajs/cron": "^1.2.0",
     "@elysiajs/eden": "^1.2.0",
+    "@elysiajs/static": "^1.2.0",
     "@elysiajs/swagger": "^1.2.0",
     "@tqman/nice-logger": "^1.1.1",
     "discord.js": "^14.17.3",

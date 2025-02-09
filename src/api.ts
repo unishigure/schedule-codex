@@ -1,3 +1,4 @@
+import { staticPlugin } from "@elysiajs/static";
 import { swagger } from "@elysiajs/swagger";
 import { logger } from "@tqman/nice-logger";
 import { Elysia, type Context } from "elysia";
@@ -309,6 +310,7 @@ async function getHealth(context: Context) {
 
 export const app = new Elysia()
   .use(logger({ withBanner: true }))
+  .use(staticPlugin())
   .use(
     swagger({
       path: "/docs",
@@ -320,6 +322,7 @@ export const app = new Elysia()
         },
       },
       scalarConfig: {
+        favicon: "/public/favicon.svg",
         defaultOpenAllTags: true,
       },
     }),

@@ -2,8 +2,9 @@ FROM oven/bun:1-slim
 
 COPY package.json ./
 COPY bun.lock ./
-COPY src ./
+COPY src ./src
+COPY public ./public
 
 RUN bun install
 
-CMD ["bun", "run", "api.ts"]
+CMD ["bun", "run", "src/api.ts"]

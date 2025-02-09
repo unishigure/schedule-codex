@@ -22,4 +22,4 @@ services:
     environment:
       - TZ=Asia/Tokyo
     restart: always
-    command: ["bun", "run", "cron.ts"]
+    command: ["bun", "run", "src/cron.ts"]
