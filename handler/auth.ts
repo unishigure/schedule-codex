@@ -3,8 +3,8 @@ import { resolver } from "hono-openapi/zod";
 import { createFactory } from "hono/factory";
 import { z } from "zod";
 import { extendZodWithOpenApi } from "zod-openapi";
-import { oauth2Client, scopes } from "../lib/googleapis";
-import { loadRefreshToken, saveRefreshToken } from "../lib/s3";
+import { oauth2Client, scopes } from "../../lib/googleapis";
+import { loadRefreshToken, saveRefreshToken } from "../../lib/s3";
 
 extendZodWithOpenApi(z);
 const factory = createFactory();

@@ -11,22 +11,22 @@ import {
   getOauth2CallbackHandler,
   getOauth2CallbackQuery,
   getOauth2CallbackRoute,
-} from "./handler/auth";
-import { getHealthHandler, getHealthRoute } from "./handler/health";
+} from "../handler/auth";
 import {
   getTodayHandler,
   getTodayRoute,
   postTodayHandler,
   postTodayRoute,
-} from "./handler/remind/today";
+} from "../handler/remind/today";
 import {
   getWeekHandler,
   getWeekRoute,
   postWeekHandler,
   postWeekRoute,
-} from "./handler/remind/week";
+} from "../handler/remind/week";
+import { getHealthHandler, getHealthRoute } from "./handler/health";
 
-const app = new Hono();
+const app = new Hono().basePath("/api");
 
 /**
  * OpenAPI specs
