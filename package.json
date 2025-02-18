@@ -3,6 +3,8 @@
   "type": "module",
   "module": "src/app.ts",
   "scripts": {
+    "start": "vercel dev",
+    "deploy": "vercel",
     "dev": "bun src/app.ts",
     "format": "prettier --write . "
   },
