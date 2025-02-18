@@ -6,7 +6,7 @@ import type { StatusCode } from "hono/utils/http-status";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { extendZodWithOpenApi } from "zod-openapi";
-import { oauth2Client } from "../../../lib/googleapis";
+import { oauth2Client } from "../../lib/googleapis";
 
 extendZodWithOpenApi(z);
 const factory = createFactory();

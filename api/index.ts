@@ -12,6 +12,7 @@ import {
   getOauth2CallbackQuery,
   getOauth2CallbackRoute,
 } from "../handler/auth";
+import { getHealthHandler, getHealthRoute } from "../handler/health";
 import {
   getTodayHandler,
   getTodayRoute,
@@ -24,7 +25,6 @@ import {
   postWeekHandler,
   postWeekRoute,
 } from "../handler/remind/week";
-import { getHealthHandler, getHealthRoute } from "./handler/health";
 
 const app = new Hono().basePath("/api");
 
@@ -51,7 +51,7 @@ app.get(
   "/docs",
   apiReference({
     pageTitle: "Schedule Codex",
-    spec: { url: "/openapi" },
+    spec: { url: "/api/openapi" },
     favicon: "/favicon.svg",
     theme: "deepSpace",
     defaultOpenAllTags: true,
