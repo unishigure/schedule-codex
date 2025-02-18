@@ -61,7 +61,7 @@ app.get(
 app
   .use(logger())
   .use("/favicon.svg", serveStatic({ path: "./public/favicon.svg" }))
-  .get("/", (context) => context.redirect("/docs"))
+  .get("/", (context) => context.redirect("/api/docs"))
   .get("/auth", getAuthRoute, ...getAuthHandler)
   .get(
     "/oauth2callback",
