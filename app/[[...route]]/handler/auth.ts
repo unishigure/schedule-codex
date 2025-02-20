@@ -75,6 +75,7 @@ export const getOauth2CallbackRoute = describeRoute({
       },
     },
   },
+  hide: true,
 });
 
 export const getOauth2CallbackHandler = factory.createHandlers(
