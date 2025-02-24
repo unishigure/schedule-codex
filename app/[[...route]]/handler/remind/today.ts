@@ -11,6 +11,8 @@ import { oauth2Client } from "../../lib/googleapis";
 extendZodWithOpenApi(z);
 const factory = createFactory();
 
+process.env.TZ = "Asia/Tokyo";
+
 export async function getToday() {
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
@@ -24,6 +26,7 @@ export async function getToday() {
     maxResults: 10,
     singleEvents: true,
     orderBy: "startTime",
+    timeZone: "Asia/Tokyo",
   });
 
   return events.data.items || [];
@@ -36,18 +39,14 @@ const getTodayResponse = z.array(
     summary: z
       .string()
       .openapi({ description: "The event summary", example: "Meeting" }),
-    start: z
-      .string()
-      .openapi({
-        description: "The start date-time",
-        example: "2021-10-01T09:00:00+09:00",
-      }),
-    end: z
-      .string()
-      .openapi({
-        description: "The end date-time",
-        example: "2021-10-01T10:00:00+09:00",
-      }),
+    start: z.string().openapi({
+      description: "The start date-time",
+      example: "2021-10-01T09:00:00+09:00",
+    }),
+    end: z.string().openapi({
+      description: "The end date-time",
+      example: "2021-10-01T10:00:00+09:00",
+    }),
   }),
 );
 

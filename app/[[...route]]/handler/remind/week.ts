@@ -11,6 +11,8 @@ import { oauth2Client } from "../../lib/googleapis";
 extendZodWithOpenApi(z);
 const factory = createFactory();
 
+process.env.TZ = "Asia/Tokyo";
+
 async function getWeek() {
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
@@ -31,6 +33,7 @@ async function getWeek() {
     maxResults: 10,
     singleEvents: true,
     orderBy: "startTime",
+    timeZone: "Asia/Tokyo",
   });
 
   return events.data.items || [];
